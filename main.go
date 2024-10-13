@@ -5,16 +5,22 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"sync"
+
+	"github.com/vit0rr/go-chat/trace"
 )
 
 func main() {
 	var addr = flag.String("addr", ":8080", "The addr of the application.")
 	flag.Parse()
 	r := newRoom()
-	// r.tracer = trace.New(os.Stdout)
-	http.Handle("/", &templateHandler{filename: "templates/chat.html"})
+	r.tracer = trace.New(os.Stdout)
+
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "templates/chat.html"}))
+	http.Handle("/login", &templateHandler{filename: "templates/login.html"})
 	http.Handle("/room", r)
+
 	go r.run()
 
 	log.Printf("Starting web server on %s%s", "http://localhost", *addr)
